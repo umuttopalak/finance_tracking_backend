@@ -2,6 +2,11 @@ from fastapi import FastAPI, HTTPException
 from typing import List
 from models import FinancialItem, Category
 from datetime import datetime
+from fastapi.middleware.wsgi import WSGIMiddleware
+from flask import Flask, request
+
+flask_app = Flask(__name__)
+
 
 app = FastAPI()
 
@@ -40,3 +45,15 @@ def get_financial_item(item_id: int):
         if item.id == item_id:
             return item
     raise HTTPException(status_code=404, detail="Financial item not found")
+
+@app.get("/v2")
+def read_main():
+    return {"message": "Hello World"}
+
+@flask_app.route("/")
+def flask_main():
+    name = request.args.get("name", "World")
+    return f"Hello, {(name)} from Flask!"
+
+
+app.mount("/v1", WSGIMiddleware(flask_app))
