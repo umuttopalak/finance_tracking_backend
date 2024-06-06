@@ -1,59 +1,57 @@
-from fastapi import FastAPI, HTTPException
-from typing import List
+from flask import Flask, request, jsonify, abort
+from pydantic import ValidationError
 from models import FinancialItem, Category
 from datetime import datetime
-from fastapi.middleware.wsgi import WSGIMiddleware
-from flask import Flask, request
 
-flask_app = Flask(__name__)
-
-
-app = FastAPI()
+app = Flask(__name__)
 
 items = []
 categories = []
 item_id_counter = 1
 category_id_counter = 1
 
-@app.post("/categories/", response_model=Category)
-def create_category(category: Category):
+@app.route("/categories/", methods=["POST"])
+def create_category():
     global category_id_counter
+    try:
+        data = request.get_json()
+        category = Category(**data)
+    except ValidationError as e:
+        return jsonify(e.errors()), 400
+
     category.id = category_id_counter
     category_id_counter += 1
     categories.append(category)
-    return category
+    return jsonify(category.dict()), 201
 
-@app.get("/categories/", response_model=List[Category])
+@app.route("/categories/", methods=["GET"])
 def get_categories():
-    return categories
+    return jsonify([category.dict() for category in categories])
 
-@app.post("/financial_items/", response_model=FinancialItem)
-def create_financial_item(item: FinancialItem):
+@app.route("/financial_items/", methods=["POST"])
+def create_financial_item():
     global item_id_counter
+    try:
+        data = request.get_json()
+        item = FinancialItem(**data)
+    except ValidationError as e:
+        return jsonify(e.errors()), 400
+
     item.id = item_id_counter
     item_id_counter += 1
     items.append(item)
-    return item
+    return jsonify(item.dict()), 201
 
-@app.get("/financial_items/", response_model=List[FinancialItem])
+@app.route("/financial_items/", methods=["GET"])
 def get_financial_items():
-    return items
+    return jsonify([item.dict() for item in items])
 
-@app.get("/financial_items/{item_id}", response_model=FinancialItem)
-def get_financial_item(item_id: int):
+@app.route("/financial_items/<int:item_id>", methods=["GET"])
+def get_financial_item(item_id):
     for item in items:
         if item.id == item_id:
-            return item
-    raise HTTPException(status_code=404, detail="Financial item not found")
+            return jsonify(item.dict())
+    abort(404, description="Financial item not found")
 
-@app.get("/v2")
-def read_main():
-    return {"message": "Hello World"}
-
-@flask_app.route("/")
-def flask_main():
-    name = request.args.get("name", "World")
-    return f"Hello, {(name)} from Flask!"
-
-
-app.mount("/v1", WSGIMiddleware(flask_app))
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=8000)
