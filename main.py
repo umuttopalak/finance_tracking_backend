@@ -2,8 +2,11 @@ from flask import Flask, request, jsonify, abort
 from pydantic import ValidationError
 from models import FinancialItem, Category
 from datetime import datetime
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 
 items = []
 categories = []
