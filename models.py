@@ -7,16 +7,32 @@ class FinancalItemType(str, Enum):
     expense = "expense"
     
 class Category(BaseModel):
-    id: int
+    id: str
     name: str
+    
+    def to_dict(self):
+        return {
+            "id" : self.id,
+            "name": self.name
+        }
 
 class FinancialItem(BaseModel):
-    id: int
+    id: str
     amount: float
     date: datetime
     category_id: int
     type: FinancalItemType
     description: str
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "amount": self.amount,
+            "date": self.date.isoformat(),
+            "category_id": self.category_id,
+            "type": self.type.value,
+            "description": self.description
+        }
 
 
 
