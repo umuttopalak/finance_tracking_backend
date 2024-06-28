@@ -20,7 +20,7 @@ class FinancialItem(BaseModel):
     id: str
     amount: float
     date: datetime
-    category_id: int
+    category_id: str
     type: FinancalItemType
     description: str
 
